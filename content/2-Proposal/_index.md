@@ -1,113 +1,120 @@
 ---
 title: "Proposal"
-date: 2024-01-01
+date: 2026-01-01
 weight: 2
 chapter: false
-pre: " <b> 2. </b> "
+pre: "  2.  "
 ---
 
 
-In this section, you need to summarize the contents of the workshop that you **plan** to conduct.
-
-# IoT Weather Platform for Lab Research
-## A Unified AWS Serverless Solution for Real-Time Weather Monitoring
-
+LMS & AI Proctoring System
+Serverless Learning Management and AI Proctoring System on AWS
 ### 1. Executive Summary
-The IoT Weather Platform is designed for the ITea Lab team in Ho Chi Minh City to enhance weather data collection and analysis. It supports up to 5 weather stations, with potential scalability to 10-15, utilizing Raspberry Pi edge devices with ESP32 sensors to transmit data via MQTT. The platform leverages AWS Serverless services to deliver real-time monitoring, predictive analytics, and cost efficiency, with access restricted to 5 lab members via Amazon Cognito.
+- The LMS & AI Proctoring System is a Learning Management System (LMS) combined with AI-powered exam proctoring, built on an event-driven architecture using the AWS cloud platform. The system comprehensively supports the online examination lifecycle: from course and exam creation to the test-taking process and result retrieval. The core differentiator of the platform is the application of AI for automated grading (multiple-choice and essays) and candidate behavior monitoring via webcam to detect cheating in real time. By leveraging a serverless architecture, the system optimizes operating costs, minimizes manual monitoring efforts, and ensures flexible scalability based on the number of candidates.
 
 ### 2. Problem Statement
-### What’s the Problem?
-Current weather stations require manual data collection, becoming unmanageable with multiple units. There is no centralized system for real-time data or analytics, and third-party platforms are costly and overly complex.
+*Current Problems*
+Organizing online exams across many educational institutions faces major challenges in monitoring, making cheating easy to occur (looking up documents, having someone else take the exam). Instructors must spend significant manpower and time directly monitoring video feeds or manually grading essay papers. Additionally, traditional LMS systems are often disjointed, lack built-in proctoring mechanisms, and are prone to crashing when concurrent candidate traffic spikes during final exams.
 
-### The Solution
-The platform uses AWS IoT Core to ingest MQTT data, AWS Lambda and API Gateway for processing, Amazon S3 for storage (including a data lake), and AWS Glue Crawlers and ETL jobs to extract, transform, and load data from the S3 data lake to another S3 bucket for analysis. AWS Amplify with Next.js provides the web interface, and Amazon Cognito ensures secure access. Similar to Thingsboard and CoreIoT, users can register new devices and manage connections, though this platform operates on a smaller scale and is designed for private use. Key features include real-time dashboards, trend analysis, and low operational costs.
+*Solution*
+- The project builds a unified platform integrating an LMS and an AI proctoring pipeline. The system uses Kinesis Video Streams to ingest candidate video feeds, passing them through the AWS AI ecosystem (Rekognition, Transcribe, Bedrock) to recognize faces, prohibited objects, and transcribe voice audio. Cheating data is risk-scored and stored at high speed on DynamoDB, while emergency alerts are dispatched via SNS.
 
-### Benefits and Return on Investment
-The solution establishes a foundational resource for lab members to develop a larger IoT platform, serving as a study resource, and provides a data foundation for AI enthusiasts for model training or analysis. It reduces manual reporting for each station via a centralized platform, simplifying management and maintenance, and improves data reliability. Monthly costs are $0.66 USD per the AWS Pricing Calculator, with a 12-month total of $7.92 USD. All IoT equipment costs are covered by the existing weather station setup, eliminating additional development expenses. The break-even period of 6-12 months is achieved through significant time savings from reduced manual work.
+*Objectives*
+- Ensure fairness in online examinations, reduce workload for instructors, and provide a highly available infrastructure operating on a pay-as-you-go pricing model based on actual usage.
 
 ### 3. Solution Architecture
-The platform employs a serverless AWS architecture to manage data from 5 Raspberry Pi-based stations, scalable to 15. Data is ingested via AWS IoT Core, stored in an S3 data lake, and processed by AWS Glue Crawlers and ETL jobs to transform and load it into another S3 bucket for analysis. Lambda and API Gateway handle additional processing, while Amplify with Next.js hosts the dashboard, secured by Cognito. The architecture is detailed below:
+- The platform adopts an AWS Serverless architecture, maintaining a clear separation between the Frontend (Client), core LMS business logic (Backend), and the automated AI proctoring processing pipeline.
 
-![IoT Weather Station Architecture](/images/2-Proposal/edge_architecture.jpeg)
+**AWS Services Used:**
 
-![IoT Weather Platform Architecture](/images/2-Proposal/platform_architecture.jpeg)
+- Frontend & Security: Amazon Route 53, AWS WAF, AWS Amplify.
 
-### AWS Services Used
-- **AWS IoT Core**: Ingests MQTT data from 5 stations, scalable to 15.
-- **AWS Lambda**: Processes data and triggers Glue jobs (two functions).
-- **Amazon API Gateway**: Facilitates web app communication.
-- **Amazon S3**: Stores raw data in a data lake and processed outputs (two buckets).
-- **AWS Glue**: Crawlers catalog data, and ETL jobs transform and load it.
-- **AWS Amplify**: Hosts the Next.js web interface.
-- **Amazon Cognito**: Secures access for lab users.
+- Authentication & API: Amazon Cognito (STUDENT/INSTRUCTOR role management), Amazon API Gateway.
 
-### Component Design
-- **Edge Devices**: Raspberry Pi collects and filters sensor data, sending it to IoT Core.
-- **Data Ingestion**: AWS IoT Core receives MQTT messages from the edge devices.
-- **Data Storage**: Raw data is stored in an S3 data lake; processed data is stored in another S3 bucket.
-- **Data Processing**: AWS Glue Crawlers catalog the data, and ETL jobs transform it for analysis.
-- **Web Interface**: AWS Amplify hosts a Next.js app for real-time dashboards and analytics.
-- **User Management**: Amazon Cognito manages user access, allowing up to 5 active accounts.
+- Core Compute & Integration: AWS Lambda (business logic processing), Amazon EventBridge, Amazon SQS, AWS Step Functions (AI workflow orchestration).
+
+- Video & AI Proctoring: Amazon Kinesis Video Streams, Amazon Polly (reading questions/instructions), Amazon Rekognition, Amazon Transcribe, Amazon Bedrock.
+
+- Data Persistence: Amazon Aurora DB (LMS data), Amazon S3 (raw video storage), Amazon DynamoDB (cheating log storage).
+
+- Observability & Alerts: Amazon CloudWatch, AWS X-Ray, Amazon SNS (real-time alerts).
+
+- Security & Governance: AWS IAM, AWS KMS, AWS Secrets Manager, AWS SAM/CDK (IaC).
+![Architecture](/images/2-Proposal/platform_architecture.jpg)
 
 ### 4. Technical Implementation
-**Implementation Phases**
-This project has two parts—setting up weather edge stations and building the weather platform—each following 4 phases:
-- Build Theory and Draw Architecture: Research Raspberry Pi setup with ESP32 sensors and design the AWS serverless architecture (1 month pre-internship)
-- Calculate Price and Check Practicality: Use AWS Pricing Calculator to estimate costs and adjust if needed (Month 1).
-- Fix Architecture for Cost or Solution Fit: Tweak the design (e.g., optimize Lambda with Next.js) to stay cost-effective and usable (Month 2).
-- Develop, Test, and Deploy: Code the Raspberry Pi setup, AWS services with CDK/SDK, and Next.js app, then test and release to production (Months 2-3).
+- Technology & Infrastructure Requirements
 
-**Technical Requirements**
-- Weather Edge Station: Sensors (temperature, humidity, rainfall, wind speed), a microcontroller (ESP32), and a Raspberry Pi as the edge device. Raspberry Pi runs Raspbian, handles Docker for filtering, and sends 1 MB/day per station via MQTT over Wi-Fi.
-- Weather Platform: Practical knowledge of AWS Amplify (hosting Next.js), Lambda (minimal use due to Next.js), AWS Glue (ETL), S3 (two buckets), IoT Core (gateway and rules), and Cognito (5 users). Use AWS CDK/SDK to code interactions (e.g., IoT Core rules to S3). Next.js reduces Lambda workload for the fullstack web app.
+- Frontend: ReactJS, Vite, Tailwind CSS. The interface is statically hosted on Amazon Amplify combined with S3 for asset storage.
 
-### 5. Timeline & Milestones
-**Project Timeline**
-- Pre-Internship (Month 0): 1 month for planning and old station review.
-- Internship (Months 1-3): 3 months.
-    - Month 1: Study AWS and upgrade hardware.
-    - Month 2: Design and adjust architecture.
-    - Month 3: Implement, test, and launch.
-- Post-Launch: Up to 1 year for research.
+- Backend & Pipeline: Fully processed through Amazon API Gateway (REST API) and AWS Lambda to support the event-driven model.
 
-### 6. Budget Estimation
-You can find the budget estimation on the [AWS Pricing Calculator](https://calculator.aws/#/estimate?id=621f38b12a1ef026842ba2ddfe46ff936ed4ab01).  
-Or you can download the [Budget Estimation File](../attachments/budget_estimation.pdf).
+- Database: Relational data (courses, users) resides in Aurora DB; high-throughput read/write data during exams (monitoring logs) resides in DynamoDB.
 
-### Infrastructure Costs
-- AWS Services:
-    - AWS Lambda: $0.00/month (1,000 requests, 512 MB storage).
-    - S3 Standard: $0.15/month (6 GB, 2,100 requests, 1 GB scanned).
-    - Data Transfer: $0.02/month (1 GB inbound, 1 GB outbound).
-    - AWS Amplify: $0.35/month (256 MB, 500 ms requests).
-    - Amazon API Gateway: $0.01/month (2,000 requests).
-    - AWS Glue ETL Jobs: $0.02/month (2 DPUs).
-    - AWS Glue Crawlers: $0.07/month (1 crawler).
-    - MQTT (IoT Core): $0.08/month (5 devices, 45,000 messages).
+- Non-functional Requirements
 
-Total: $0.7/month, $8.40/12 months
+- API response time under 2 seconds under normal conditions.
 
-- Hardware: $265 one-time (Raspberry Pi 5 and sensors).
+- Latency for detecting and recording anomalous behavior in video/audio streams under 5 seconds.
 
-### 7. Risk Assessment
-#### Risk Matrix
-- Network Outages: Medium impact, medium probability.
-- Sensor Failures: High impact, low probability.
-- Cost Overruns: Medium impact, low probability.
+- System capability to auto-scale with traffic, ensuring backup and disaster recovery support.
 
-#### Mitigation Strategies
-- Network: Local storage on Raspberry Pi with Docker.
-- Sensors: Regular checks and spares.
-- Cost: AWS budget alerts and optimization.
+### 5. Cost Estimation
+- Assuming the system serves a scale of 500 students, organizing 50 exam sessions/month, with each session averaging 45 minutes of video streaming. The platform requires zero hardware investment (0 VND).
 
-#### Contingency Plans
-- Revert to manual methods if AWS fails.
-- Use CloudFormation for cost-related rollbacks.
+Estimated Monthly AWS Infrastructure Cost:
 
-### 8. Expected Outcomes
-#### Technical Improvements: 
-Real-time data and analytics replace manual processes.  
-Scalable to 10-15 stations.
-#### Long-term Value
-1-year data foundation for AI research.  
-Reusable for future projects.
+- AWS Lambda (20,000 req, 512MB): 0 USD
+
+- Amazon API Gateway (20,000 req): 0.02 USD
+
+- Amazon DynamoDB (On-demand): 1.19 USD
+
+- Amazon S3 (Video and media storage): 1.26 USD
+
+- Amazon Kinesis Video Streams: 0.18 USD
+
+- Amazon Rekognition: 4.09 USD
+
+- Amazon Transcribe: 0.60 USD
+
+- Amazon Bedrock: 8.64 USD
+
+- Amazon CloudWatch (15 metrics): 4.50 USD
+
+- Amazon SNS (10,000 req): 0 USD
+
+- AWS Security (IAM Access Analyzer / KMS / Secrets Manager): 4.46 USD
+
+- Amazon Cognito: 0.07 USD
+
+**Total**: ~25.01 USD/month (approx. ~650,000 VND). <br>
+**Annual Cost:** ~300.12 USD/year.
+
+### 6. Risk Assessment
+- Key Risk Matrix
+
+- System Overload (Peak Hours): High impact, medium probability.
+
+- Exceeded AWS Costs (Excessive AI Calls): Medium impact, high probability.
+
+- Data Loss or Corruption: Critical impact, low probability.
+
+- High-Tech Cheating (Deepfake): Medium impact, low probability.
+
+- Mitigation & Contingency Strategies
+
+- Utilize AWS WAF Rate Limiting and the inherent auto-scaling nature of Serverless to prevent overloads.
+
+- Set up AWS Budgets and CloudWatch Billing Alarms to trigger alerts or throttles when costs reach thresholds.
+
+- Enable Point-in-Time Recovery (PITR) on the database to safeguard against data loss incidents.
+
+- Contingency Plan: If AWS AI services experience service interruptions, the system falls back automatically: allowing submission to proceed normally, temporarily disabling AI, and flagging the video stream for manual instructor review after the exam ends.
+
+### 7. Expected Outcomes
+- Technical Improvements
+Successfully construct an end-to-end business workflow from question generation to online grading on the AWS Serverless platform. Eliminate latency in traditional monitoring, provide real-time alerts, and centrally manage all learning and examination data.
+
+- Long-term Value
+The solution provides a transparent educational environment, saving hundreds of working hours for instructors in proctoring and grading. The system architecture serves as a foundation for students to practice real-world Cloud skills, while easily scaling to add further features (such as AI-driven oral examination, personalized learning analytics) toward completing a true commercial product.
