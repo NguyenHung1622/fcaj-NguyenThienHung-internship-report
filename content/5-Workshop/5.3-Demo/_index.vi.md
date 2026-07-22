@@ -8,7 +8,7 @@ pre : " <b> 5.3. </b> "
 
 1. Video Demo
 <video controls width="100%" height="300">
-  <source src="/fcaj-NguyenThienHung-internship-report/videos/demo.mp4" type="video/mp4">
+  <source src="/videos/demo.mp4" type="video/mp4">
 </video>
 
 2. Tổng quan giao diện sản phẩm
